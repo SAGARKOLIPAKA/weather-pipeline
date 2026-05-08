@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Environment variables / secrets
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS junk
+.DS_Store
+.AppleDouble
+
+# VS Code
+.vscode/
+
+# dbt
+dbt_transforms/target/
+dbt_transforms/logs/
+dbt_transforms/.user.yml
+
+# Airflow
+airflow/logs/
+airflow/plugins/
+
+# Great Expectations
+data_quality/uncommitted/
