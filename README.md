@@ -178,3 +178,19 @@ This pipeline was built on Azure but maps directly to AWS:
 - [ ] Multi-environment dbt profiles (dev/staging/prod)
 - [ ] Deploy Airflow to Azure Container Instances for cloud execution
 - [ ] Extend to 20+ cities with config-driven city list
+
+---
+
+## Live Dashboard
+🌍 [Global Weather Analytics Dashboard](YOUR_TABLEAU_URL_HERE)
+
+Built with Tableau Public — visualizes the Gold layer output from the dbt pipeline.
+Shows real-time temperature, humidity, wind speed, and weather conditions across 5 global cities.
+
+---
+
+## Live Dashboard
+🌍 [Global Weather Analytics Dashboard](YOUR_TABLEAU_URL_HERE)
+
+Built with Tableau Public — visualizes the Gold layer output from the dbt pipeline.
+Shows real-time temperature, humidity, wind speed, and weather conditions across 5 global cities.
