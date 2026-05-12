@@ -168,6 +168,8 @@ This pipeline was built on Azure but maps directly to AWS:
 🌍 [Global Weather Analytics Dashboard](https://public.tableau.com/app/profile/sagar.kolipaka7753/viz/GlobalWeatherAnalyticsDashboard/GlobalWeatherAnalyticsDashboard)
 
 Built with Tableau Public. Visualizes the Gold layer output from the dbt pipeline — showing temperature, humidity, wind speed, and weather conditions across 5 global cities.
+
+---
 ## Future Enhancements
 - [ ] Incremental loading — only process new records each run
 - [ ] Add Metabase or Grafana dashboard on Gold layer
