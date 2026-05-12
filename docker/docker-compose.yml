@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   postgres:
@@ -24,17 +22,7 @@ services:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-    command: >
-      bash -c "
-        airflow db init &&
-        airflow users create
-          --username admin
-          --password admin
-          --firstname Sagar
-          --lastname Kolipaka
-          --role Admin
-          --email sagarkolipaka923@gmail.com
-      "
+    command: bash -c "airflow db init && airflow users create --username admin --password admin --firstname Sagar --lastname Kolipaka --role Admin --email sagarkolipaka923@gmail.com"
 
   airflow:
     image: apache/airflow:2.8.1
@@ -51,11 +39,7 @@ services:
       - "8080:8080"
     volumes:
       - ../airflow/dags:/opt/airflow/dags
-    command: >
-      bash -c "
-        airflow webserver &
-        airflow scheduler
-      "
+    command: bash -c "airflow webserver & airflow scheduler"
 
 volumes:
   postgres_data:
