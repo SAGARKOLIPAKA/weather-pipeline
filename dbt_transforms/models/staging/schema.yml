@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: stg_weather
+    description: "Silver layer: cleaned and typed weather data from OpenWeatherMap API"
+    columns:
+      - name: weather_id
+        description: "Unique record identifier"
+        tests:
+          - unique
+          - not_null
+      - name: city_name
+        description: "Name of the city"
+        tests:
+          - not_null
+      - name: temperature_c
+        description: "Temperature in Celsius"
+        tests:
+          - not_null
+      - name: humidity_pct
+        description: "Relative humidity percentage"
+        tests:
+          - not_null

@@ -1,0 +1,19 @@
+name: 'weather_transforms'
+version: '1.0.0'
+config-version: 2
+
+profile: 'weather_transforms'
+
+model-paths: ["models"]
+test-paths: ["tests"]
+docs-paths: ["docs"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  weather_transforms:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
