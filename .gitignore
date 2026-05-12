@@ -35,3 +35,4 @@ airflow/plugins/
 
 # Great Expectations
 data_quality/uncommitted/
+data/raw/
