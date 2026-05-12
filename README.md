@@ -168,3 +168,13 @@ This pipeline was built on Azure but maps directly to AWS:
 **Sagar Kolipaka**
 - GitHub: [@SAGARKOLIPAKA](https://github.com/SAGARKOLIPAKA)
 - LinkedIn: *(add your LinkedIn URL)*
+
+---
+
+## Future Enhancements
+- [ ] Incremental loading — only process new records each run
+- [ ] Add Metabase or Grafana dashboard on Gold layer
+- [ ] CI/CD with GitHub Actions to run dbt tests on every PR
+- [ ] Multi-environment dbt profiles (dev/staging/prod)
+- [ ] Deploy Airflow to Azure Container Instances for cloud execution
+- [ ] Extend to 20+ cities with config-driven city list
