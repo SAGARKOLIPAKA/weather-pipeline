@@ -163,14 +163,12 @@ This pipeline was built on Azure but maps directly to AWS:
 
 ---
 
-## Author
+## Live Dashboard
+🌍 [Global Weather Analytics Dashboard](https://public.tableau.com/app/profile/sagar.kolipaka7753/viz/GlobalWeatherAnalyticsDashboard/GlobalWeatherAnalyticsDashboard))
 
-**Sagar Kolipaka**
-- GitHub: [@SAGARKOLIPAKA](https://github.com/SAGARKOLIPAKA)
-- LinkedIn: [sagarkolipaka98](https://www.linkedin.com/in/sagarkolipaka98/)
-
+Built with Tableau Public — visualizes the Gold layer output from the dbt pipeline.
+Shows real-time temperature, humidity, wind speed, and weather conditions across 5 global cities.
 ---
-
 ## Future Enhancements
 - [ ] Incremental loading — only process new records each run
 - [ ] Add Metabase or Grafana dashboard on Gold layer
@@ -180,9 +178,11 @@ This pipeline was built on Azure but maps directly to AWS:
 - [ ] Extend to 20+ cities with config-driven city list
 
 ---
+## Author
 
-## Live Dashboard
-🌍 [Global Weather Analytics Dashboard](https://public.tableau.com/app/profile/sagar.kolipaka7753/viz/GlobalWeatherAnalyticsDashboard/GlobalWeatherAnalyticsDashboard))
+**Sagar Kolipaka**
+- GitHub: [@SAGARKOLIPAKA](https://github.com/SAGARKOLIPAKA)
+- LinkedIn: [sagarkolipaka98](https://www.linkedin.com/in/sagarkolipaka98/)
 
-Built with Tableau Public — visualizes the Gold layer output from the dbt pipeline.
-Shows real-time temperature, humidity, wind speed, and weather conditions across 5 global cities.
+---
+
