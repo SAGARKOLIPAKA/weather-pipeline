@@ -167,7 +167,7 @@ This pipeline was built on Azure but maps directly to AWS:
 
 **Sagar Kolipaka**
 - GitHub: [@SAGARKOLIPAKA](https://github.com/SAGARKOLIPAKA)
-- LinkedIn: *(add your LinkedIn URL)*
+- LinkedIn: [sagarkolipaka98](https://www.linkedin.com/in/sagarkolipaka98/)
 
 ---
 
