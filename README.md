@@ -1,134 +1,268 @@
-# Weather Data Pipeline 🌦️
+# 🌦️ Weather Data Pipeline
 
 An end-to-end data engineering pipeline that ingests real-time weather data
-from the OpenWeatherMap API, stores it in Azure Data Lake Storage Gen2,
-transforms it using dbt, and orchestrates everything with Apache Airflow.
+from the OpenWeatherMap API, stores raw data in Azure Data Lake Storage Gen2,
+transforms it using dbt, validates quality with Great Expectations, and
+orchestrates everything with Apache Airflow — all running locally with Docker.
 
-Built as a portfolio project covering both ETL and ELT patterns using
+Built as a portfolio project covering both **ETL and ELT patterns** using
 industry-standard tools.
+
+**Live Dashboard →** [Global Weather Analytics Dashboard](https://public.tableau.com/app/profile/sagar.kolipaka7753/viz/GlobalWeatherAnalyticsDashboard/GlobalWeatherAnalyticsDashboard)
 
 ---
 
 ## Architecture
-### Medallion Architecture
+
+```
+OpenWeatherMap API
+        │
+        ▼
+Python Ingestion Script (fetch_weather.py)
+        │
+        ├─────────────────────────────────────┐
+        ▼                                     ▼
+Azure Data Lake Gen2                   PostgreSQL
+(Bronze — raw JSON)              (raw_weather table)
+date-partitioned by city                    │
+                                            ▼
+                                  Great Expectations
+                                  (data quality gate)
+                                            │
+                                            ▼
+                                      dbt Models
+                                 ┌─────────────────┐
+                                 │  stg_weather    │ ← Silver layer (view)
+                                 │  daily_weather  │ ← Gold layer  (table)
+                                 └─────────────────┘
+                                            │
+                                            ▼
+                                    Tableau Public
+                                  (Live Dashboard)
+                                            │
+                                 ┌──────────────────┐
+                                 │   Airflow DAG    │
+                                 │  orchestrates    │
+                                 │  all steps on    │
+                                 │ hourly schedule  │
+                                 └──────────────────┘
+```
+
+---
+
+## Medallion Architecture
+
 | Layer | Location | Description |
 |---|---|---|
-| **Bronze** | Azure Data Lake Storage Gen2 | Raw JSON exactly as received from API |
-| **Silver** | PostgreSQL (`weather.stg_weather`) | Cleaned, typed, renamed columns |
-| **Gold** | PostgreSQL (`weather.daily_weather`) | Daily aggregated analytics table |
+| **Bronze** | Azure Data Lake Storage Gen2 | Raw JSON exactly as received from API, date-partitioned |
+| **Silver** | PostgreSQL (`weather.stg_weather`) | Cleaned, typed, renamed columns — materialized as view |
+| **Gold** | PostgreSQL (`weather.daily_weather`) | Daily aggregated analytics — materialized as table |
 
 ---
 
 ## Tech Stack
 
-| Tool | Purpose | Cloud Equivalent |
-|---|---|---|
-| Python 3.11 | Data ingestion, scripting | — |
-| Apache Airflow 2.8 | Pipeline orchestration | AWS MWAA / Azure Data Factory |
-| PostgreSQL 15 | Data warehouse (serving layer) | AWS RDS / Azure Database for PostgreSQL |
-| dbt (data build tool) | SQL transformations + testing | — |
-| Azure Data Lake Gen2 | Raw data storage (Bronze layer) | AWS S3 |
-| Great Expectations | Data quality validation | — |
-| Docker + Compose | Local infrastructure | AWS ECS / Azure Container Instances |
+| Tool | Version | Purpose | Cloud Equivalent |
+|---|---|---|---|
+| Python | 3.11 | Data ingestion, scripting | — |
+| Apache Airflow | 2.8.1 | Pipeline orchestration | AWS MWAA / Azure Data Factory |
+| PostgreSQL | 15 | Data warehouse serving layer | AWS RDS / Azure DB for PostgreSQL |
+| dbt | 1.7 | SQL transformations + testing | — |
+| Azure Data Lake Gen2 | — | Raw data storage (Bronze) | AWS S3 |
+| Great Expectations | 0.18 | Pre-load data quality validation | — |
+| Docker + Compose | — | Local infrastructure | AWS ECS / Azure Container Instances |
+| Tableau Public | — | Analytics dashboard | Power BI / Looker |
 
 ---
 
 ## Pipeline Flow
-Each step depends on the previous — if any step fails, downstream tasks
-stop automatically and Airflow retries once after 5 minutes.
+
+```
+[1] fetch_weather        Pull current weather for 5 cities from OpenWeatherMap API
+         ↓
+[2] validate_data        Run Great Expectations checks on raw incoming data
+         ↓
+[3] load_to_postgres     Load raw JSON into PostgreSQL staging table
+         ↓
+[4] upload_to_azure      Upload raw JSON files to Azure Data Lake (Bronze layer)
+         ↓
+[5] dbt_run              Transform raw → Silver view → Gold analytics table
+         ↓
+[6] dbt_test             Validate transformed data with dbt schema tests
+```
+
+Each task depends on the previous — if any step fails, all downstream tasks
+stop automatically. Airflow retries failed tasks once after 5 minutes.
 
 ---
 
 ## Project Structure
+
+```
+weather-pipeline/
+│
+├── ingestion/                        # Python scripts
+│   ├── fetch_weather.py              # Pulls data from OpenWeatherMap API
+│   ├── load_to_postgres.py           # Loads raw JSON into PostgreSQL
+│   └── upload_to_azure.py            # Uploads files to Azure Data Lake
+│
+├── dbt_transforms/                   # dbt transformation layer
+│   ├── models/
+│   │   ├── staging/
+│   │   │   ├── stg_weather.sql       # Silver layer — clean + typed view
+│   │   │   └── schema.yml            # Column definitions + dbt tests
+│   │   └── marts/
+│   │       └── daily_weather.sql     # Gold layer — daily aggregations table
+│   └── dbt_project.yml               # dbt project config
+│
+├── airflow/
+│   └── dags/
+│       └── weather_dag.py            # 6-task Airflow DAG definition
+│
+├── data_quality/
+│   └── expectations/
+│       └── validate_weather.py       # Great Expectations validation suite
+│
+├── docker/
+│   └── docker-compose.yml            # Airflow + PostgreSQL services
+│
+├── docs/
+│   └── daily_weather.csv             # Gold layer export for Tableau
+│
+├── data/
+│   └── raw/                          # Local Bronze landing zone (git-ignored)
+│       └── YYYY-MM-DD/
+│           └── city_HH-MM-SS.json
+│
+├── .env.example                      # Environment variable template
+├── .gitignore                        # Protects secrets + ignores data files
+├── requirements.txt                  # Python dependencies
+└── README.md                         # This file
+```
+
 ---
 
 ## Getting Started
 
 ### Prerequisites
+
 - Docker Desktop
 - Python 3.11+
+- Git
 - Azure Storage Account with hierarchical namespace enabled
 - OpenWeatherMap API key (free at openweathermap.org)
 
 ### 1 — Clone the Repository
+
 ```bash
 git clone https://github.com/SAGARKOLIPAKA/weather-pipeline.git
 cd weather-pipeline
 ```
 
 ### 2 — Set Up Environment Variables
+
 ```bash
 cp .env.example .env
-# Edit .env with your real API keys and credentials
+# Open .env and fill in your real API keys and credentials
 ```
 
 ### 3 — Install Python Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4 — Start Local Infrastructure
+### 4 — Start Local Infrastructure (Docker)
+
 ```bash
 docker compose -f docker/docker-compose.yml up -d
 ```
 
-Airflow UI available at: http://localhost:8080 (admin/admin)
+- Airflow UI: http://localhost:8080 (username: `admin` / password: `admin`)
+- PostgreSQL: `localhost:5432`
 
 ### 5 — Run the Pipeline Manually
+
 ```bash
-# Fetch weather data
+# Step 1: Fetch weather data from API
 python ingestion/fetch_weather.py
 
-# Validate data quality
+# Step 2: Validate raw data quality
 python data_quality/expectations/validate_weather.py
 
-# Load into PostgreSQL
+# Step 3: Load into PostgreSQL
 python ingestion/load_to_postgres.py
 
-# Upload to Azure Data Lake
+# Step 4: Upload to Azure Data Lake
 python ingestion/upload_to_azure.py
 
-# Run dbt transformations
-cd dbt_transforms && dbt run && dbt test
+# Step 5: Run dbt transformations
+cd dbt_transforms && dbt run
+
+# Step 6: Run dbt tests
+dbt test && cd ..
 ```
 
-### 6 — Or Let Airflow Orchestrate It
-Enable the `weather_pipeline` DAG in the Airflow UI.
-It runs automatically every hour.
+### 6 — Or Let Airflow Orchestrate Everything
+
+1. Go to http://localhost:8080
+2. Find the `weather_pipeline` DAG
+3. Toggle it **on** to enable hourly runs
+4. Click **Trigger DAG** to run immediately
 
 ---
 
 ## dbt Models
 
-### Silver Layer — `stg_weather`
-Reads from `raw_weather` table. Cleans column names, casts data types,
-filters nulls, and derives Fahrenheit temperature from Celsius.
-Materialized as a **view** for freshness.
+### Silver Layer — `stg_weather` (View)
 
-### Gold Layer — `daily_weather`
+Reads from `raw_weather` table. Cleans column names, casts data types
+explicitly, filters null records, and derives Fahrenheit temperature from
+Celsius. Materialized as a **view** so it always reflects the latest data.
+
+### Gold Layer — `daily_weather` (Table)
+
 Reads from `stg_weather`. Aggregates daily statistics per city:
-average/min/max temperature, humidity ranges, wind speed,
-and dominant weather condition.
-Materialized as a **table** for query performance.
+- Average, min, max temperature (°C and °F)
+- Average, min, max humidity
+- Average and max wind speed
+- Dominant weather condition
+
+Materialized as a **table** for fast query performance.
 
 ---
 
 ## Data Quality
 
-Two layers of validation:
+Two independent validation layers:
 
-**Great Expectations** (pre-transformation):
-- City and country fields never null
+### Great Expectations (Pre-Transformation Gate)
+Validates raw data before it enters the transformation layer:
+- `city` and `country` fields are never null
 - Temperature within physical bounds (-90°C to 60°C)
 - Humidity between 0–100%
-- Wind speed non-negative
-- Minimum 1 record per run
+- Wind speed non-negative (0–200 m/s)
+- Minimum 1 record exists per run
 
-**dbt tests** (post-transformation):
+### dbt Tests (Post-Transformation Validation)
+Validates transformed Silver layer output:
 - `weather_id` is unique and not null
 - `city_name` is not null
 - `temperature_c` is not null
 - `humidity_pct` is not null
+
+---
+
+## Airflow DAG
+
+**DAG ID:** `weather_pipeline`
+**Schedule:** `@hourly`
+**Owner:** sagar
+**Retries:** 1 (5 minute delay)
+
+```
+fetch_weather → validate_data → load_to_postgres → upload_to_azure → dbt_run → dbt_test
+```
 
 ---
 
@@ -138,15 +272,27 @@ See `.env.example` for all required variables:
 
 | Variable | Description |
 |---|---|
-| `OPENWEATHER_API_KEY` | OpenWeatherMap API key |
+| `OPENWEATHER_API_KEY` | Free API key from openweathermap.org |
 | `AZURE_STORAGE_ACCOUNT_NAME` | Azure Storage account name |
 | `AZURE_STORAGE_ACCOUNT_KEY` | Azure Storage access key |
-| `AZURE_CONTAINER_NAME` | Azure container name (default: weather-raw) |
-| `POSTGRES_HOST` | PostgreSQL host (default: localhost) |
-| `POSTGRES_PORT` | PostgreSQL port (default: 5432) |
-| `POSTGRES_DB` | Database name |
-| `POSTGRES_USER` | Database user |
+| `AZURE_CONTAINER_NAME` | Container name (default: `weather-raw`) |
+| `POSTGRES_HOST` | PostgreSQL host (default: `localhost`) |
+| `POSTGRES_PORT` | PostgreSQL port (default: `5432`) |
+| `POSTGRES_DB` | Database name (default: `airflow`) |
+| `POSTGRES_USER` | Database user (default: `airflow`) |
 | `POSTGRES_PASSWORD` | Database password |
+
+---
+
+## Cities Tracked
+
+| City | Country |
+|---|---|
+| London | 🇬🇧 GB |
+| New York | 🇺🇸 US |
+| Tokyo | 🇯🇵 JP |
+| Sydney | 🇦🇺 AU |
+| Mumbai | 🇮🇳 IN |
 
 ---
 
@@ -167,18 +313,23 @@ This pipeline was built on Azure but maps directly to AWS:
 
 🌍 [Global Weather Analytics Dashboard](https://public.tableau.com/app/profile/sagar.kolipaka7753/viz/GlobalWeatherAnalyticsDashboard/GlobalWeatherAnalyticsDashboard)
 
-Built with Tableau Public. Visualizes the Gold layer output from the dbt pipeline — showing temperature, humidity, wind speed, and weather conditions across 5 global cities.
+Built with Tableau Public. Visualizes the Gold layer output from the dbt pipeline —
+showing temperature, humidity, wind speed, and weather conditions across 5 global cities.
 
 ---
+
 ## Future Enhancements
-- [ ] Incremental loading — only process new records each run
-- [ ] Add Metabase or Grafana dashboard on Gold layer
-- [ ] CI/CD with GitHub Actions to run dbt tests on every PR
-- [ ] Multi-environment dbt profiles (dev/staging/prod)
-- [ ] Deploy Airflow to Azure Container Instances for cloud execution
+
+- [ ] Incremental loading — only process new records each run using watermarking
+- [ ] CI/CD with GitHub Actions to run dbt tests on every pull request
+- [ ] Multi-environment dbt profiles (dev / staging / prod)
+- [ ] Deploy Airflow to Azure Container Instances for full cloud execution
 - [ ] Extend to 20+ cities with config-driven city list
+- [ ] Add data lineage visualization with dbt docs
+- [ ] Real-time streaming layer with Azure Event Hub (Kafka equivalent)
 
 ---
+
 ## Author
 
 **Sagar Kolipaka**
@@ -186,4 +337,3 @@ Built with Tableau Public. Visualizes the Gold layer output from the dbt pipelin
 - LinkedIn: [sagarkolipaka98](https://www.linkedin.com/in/sagarkolipaka98/)
 
 ---
-
